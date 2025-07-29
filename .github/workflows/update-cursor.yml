@@ -1,0 +1,99 @@
+name: Update Cursor Version
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-cursor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y curl jq
+
+      - name: Fetch latest Cursor metadata
+        run: |
+          response=$(curl -Ls -H "User-Agent: Mozilla/5.0" \
+            "https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable")
+
+          if echo "$response" | jq empty >/dev/null 2>&1; then
+            url=$(echo "$response" | jq -r '.downloadUrl')
+            version=$(echo "$response" | jq -r '.version')
+
+            echo "downloadUrl=$url" >> "$GITHUB_ENV"
+            echo "version=$version" >> "$GITHUB_ENV"
+          else
+            echo "::error::Invalid JSON from Cursor API"
+            echo "$response"
+            exit 1
+          fi
+
+      - name: Download AppImage
+        run: |
+          curl -L "${{ env.downloadUrl }}" -o cursor.AppImage
+
+      - name: Calculate SHA256 hash
+        run: |
+          hash=$(sha256sum cursor.AppImage | awk '{print $1}')
+          echo "sha256=$hash" >> "$GITHUB_ENV"
+
+      - name: Patch default.nix
+        run: |
+          version="${{ env.version }}"
+          url="${{ env.downloadUrl }}"
+          sha256="${{ env.sha256 }}"
+
+          echo "Updating pkgs/cursor/default.nix..."
+
+          sed -i "s|version = \".*\";|version = \"$version\";|" pkgs/cursor/default.nix
+          sed -i "s|url = \"https://downloads.cursor.com/production/.*\";|url = \"$url\";|" pkgs/cursor/default.nix
+          sed -i "s|sha256 = \".*\";|sha256 = \"$sha256\";|" pkgs/cursor/default.nix
+
+          echo "Updated values:"
+          grep "version =" pkgs/cursor/default.nix
+          grep "url =" pkgs/cursor/default.nix
+          grep "sha256 =" pkgs/cursor/default.nix
+          echo "Git diff:"
+          git diff pkgs/cursor/default.nix
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git diff --exit-code pkgs/cursor/default.nix; then
+            git add pkgs/cursor/default.nix
+            git commit -m "feat(config): bump Cursor to ${{ env.version }}"
+            git push
+          else
+            echo "No changes detected — skipping commit."
+          fi
+
+      - name: Tag and push version
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          tag="cursor-v${{ env.version }}"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          if git ls-remote --tags origin | grep -q "refs/tags/$tag"; then
+            echo "Remote tag $tag already exists — skipping tag push."
+          else
+            git tag "$tag"
+            if [ -n "${GH_PAT}" ]; then
+              git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }} tag "$tag"
+            else
+              git push origin "$tag"
+            fi
+          fi
