@@ -73,7 +73,7 @@ jobs:
 
           if ! git diff --exit-code pkgs/cursor/default.nix; then
             git add pkgs/cursor/default.nix
-            git commit -m "feat(config): bump Cursor to ${{ env.version }}"
+            git commit -m "chore(deps): bump Cursor to ${{ env.version }}"
             git push
           else
             echo "No changes detected — skipping commit."
