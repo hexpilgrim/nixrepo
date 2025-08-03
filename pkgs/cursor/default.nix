@@ -6,13 +6,13 @@
 # AppImages rely on host libraries present in the runtime environment
 pkgs.appimageTools.wrapType2 {
   pname = "cursor";
-  version = "1.3.8";
+  version = "1.3.9";
   name = "cursor";
 
   # Fetch AppImage from official Cursor CDN
   src = pkgs.fetchurl {
-    url = "https://downloads.cursor.com/production/a1fa6fc7d2c2f520293aad84aaa38d091dee6fef/linux/x64/Cursor-1.3.8-x86_64.AppImage";
-    sha256 = "a91d56bb71f425408a22850ffd0142d58c98891690f4f54ded94fd4e31f09f59";
+    url = "https://downloads.cursor.com/production/54c27320fab08c9f5dd5873f07fca101f7a3e076/linux/x64/Cursor-1.3.9-x86_64.AppImage";
+    sha256 = "d249132fa6429cbc46050495a19ed410e04db53655428955024ff631c095d11c";
   };
 
   # Metadata for package introspection and indexing
