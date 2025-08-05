@@ -2,7 +2,7 @@ name: Update Cursor Version
 
 on:
   schedule:
-    - cron: '0 */4 * * 1-5'  # Every 4 hours, Monday through Friday
+    - cron: '0 */4 * * *'  # Every 4 hours
   workflow_dispatch:
 
 permissions:
