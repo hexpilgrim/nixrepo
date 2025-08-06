@@ -2,7 +2,7 @@ name: Update Cursor Version
 
 on:
   schedule:
-    - cron: '0 */4 * * *'  # Every 4 hours
+    - cron: '0 */1 * * *'  # Every hour
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
       - name: Fetch latest Cursor metadata
         run: |
           response=$(curl -Ls -H "User-Agent: Mozilla/5.0" \
-            "https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=stable")
+            "https://www.cursor.com/api/download?platform=linux-x64&releaseTrack=latest")
 
           if echo "$response" | jq empty >/dev/null 2>&1; then
             url=$(echo "$response" | jq -r '.downloadUrl')
