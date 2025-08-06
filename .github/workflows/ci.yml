@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_run:
+    workflows: ["Update Cursor Version"]
+    types:
+      - completed
 
 permissions: {}
 
