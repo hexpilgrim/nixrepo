@@ -40,7 +40,7 @@ jobs:
         run: |
           pkgs=$(find pkgs -mindepth 2 -maxdepth 2 -name default.nix -exec dirname {} \; | sed 's|pkgs/||')
           json=$(echo "$pkgs" | jq -R -s -c 'split("\n") | map(select(length > 0)) | map({pkg: .})')
-          echo "matrix=$json" >> $GITHUB_OUTPUT
+          echo "matrix={\"include\": $json}" >> $GITHUB_OUTPUT
 
   build:
     name: package ${{ matrix.pkg }} [x86_64-linux]
